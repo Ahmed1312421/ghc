@@ -1,11 +1,10 @@
-require('dotenv').config();
 const express = require('express');
 const fetch = require('node-fetch');
 const app = express();
 
 app.use(express.json());
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const DEEPSEEK_API_KEY = 'sk-5eaad634d9694a6d9569d0d45e440fad';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
 
 app.post('/chat', async (req, res) => {
@@ -13,11 +12,6 @@ app.post('/chat', async (req, res) => {
 
     if (!message || typeof message !== 'string') {
         return res.status(400).json({ error: 'الرسالة غير صالحة أو مفقودة' });
-    }
-
-    if (!DEEPSEEK_API_KEY) {
-        console.error('الخطأ: مفتاح DEEPSEEK_API_KEY غير مضبوط');
-        return res.status(500).json({ error: 'خطأ في إعداد الخادم: مفتاح API مفقود' });
     }
 
     try {

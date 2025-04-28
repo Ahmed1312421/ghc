@@ -1,0 +1,285 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arduino AI Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a23, #1e1e3c);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"%3E%3Cfilter id="bb"%3E%3CfeGaussianBlur in="SourceGraphic" stdDeviation="10"/%3E%3C/filter%3E%3Ccircle cx="50" cy="50" r="5" fill="white" opacity="0.3" filter="url(%23bb)"/%3E%3Ccircle cx="750" cy="750" r="3" fill="white" opacity="0.2"/%3E%3Ccircle cx="400" cy="200" r="4" fill="white" opacity="0.25"/%3E%3Ccircle cx="200" cy="600" r="5" fill="white" opacity="0.3"/%3E%3C/svg%3E');
+            background-size: cover;
+            opacity: 0.1;
+            z-index: -1;
+        }
+        .glow-bar {
+            position: fixed;
+            top: 0;
+            width: 10px;
+            height: 100%;
+            background: linear-gradient(180deg, #ff6f61, #1e3c72);
+            animation: glowPulse 3s ease-in-out infinite;
+            z-index: 0;
+        }
+        .glow-bar.left {
+            left: 0;
+        }
+        .glow-bar.right {
+            right: 0;
+        }
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.5; box-shadow: 0 0 20px rgba(255, 111, 97, 0.5); }
+            50% { opacity: 1; box-shadow: 0 0 40px rgba(255, 111, 97, 0.8); }
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            height: 700px;
+            background: #1a1a2e;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(255, 111, 97, 0.3), 0 0 20px rgba(30, 60, 114, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            animation: containerGlow 4s ease-in-out infinite;
+        }
+        @keyframes containerGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 111, 97, 0.3), 0 0 20px rgba(30, 60, 114, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(255, 111, 97, 0.5), 0 0 30px rgba(30, 60, 114, 0.5); }
+        }
+        .robot-image {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            opacity: 0.2;
+            z-index: 0;
+            filter: drop-shadow(0 0 10px rgba(255, 111, 97, 0.5));
+        }
+        .chat-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        .chat-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-body::-webkit-scrollbar-track {
+            background: #2a2a4e;
+        }
+        .chat-body::-webkit-scrollbar-thumb {
+            background: #ff6f61;
+            border-radius: 4px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 12px 18px;
+            border-radius: 15px;
+            max-width: 80%;
+            animation: slideIn 0.3s ease;
+        }
+        .user-message {
+            background: #ff6f61;
+            color: white;
+            margin-left: auto;
+        }
+        .bot-message {
+            background: #2a2a4e;
+            color: #e0e7ff;
+            margin-right: auto;
+        }
+        .code-block {
+            background: #0f0f23;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            text-align: left;
+            direction: ltr;
+        }
+        .loading {
+            text-align: center;
+            color: #e0e7ff;
+            font-size: 0.9rem;
+            padding: 10px;
+        }
+        .error-message {
+            text-align: center;
+            color: #ff5252;
+            font-size: 0.9rem;
+            padding: 10px;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="glow-bar left"></div>
+    <div class="glow-bar right"></div>
+
+    <div class="chat-container">
+        <div class="bg-gradient-to-r from-[#ff6f61] to-[#e65b50] text-white text-center py-6 text-xl font-bold rounded-t-2xl">
+            Arduino AI Chatbot
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="message bot-message">
+                Hello! I'm your AI assistant powered by DeepSeek. Ask me anything about Arduino programming or other topics!
+            </div>
+        </div>
+        <div class="p-4 bg-[#1a1a2e] border-t border-[#2a2a4e] flex items-center gap-3">
+            <input
+                type="text"
+                id="userInput"
+                placeholder="Ask about Arduino or anything else..."
+                class="flex-1 p-3 border border-[#2a2a4e] bg-[#2a2a4e] text-[#e0e7ff] rounded-full focus:outline-none focus:ring-2 focus:ring-[#ff6f61] placeholder-[#e0e7ff]/50"
+                aria-label="Type your message"
+            >
+            <button
+                id="sendButton"
+                class="px-6 py-3 bg-[#ff6f61] text-white rounded-full hover:bg-[#e65b50] disabled:bg-[#4a4a6e] disabled:cursor-not-allowed transition-colors"
+                onclick="sendMessage()"
+            >
+                Send
+            </button>
+        </div>
+    </div>
+
+    <img src="https://images.unsplash.com/photo-1599059813008-11265ba4b4ce" alt="Robot" class="robot-image">
+
+    <script>
+        const userInput = document.getElementById('userInput');
+        const chatBody = document.getElementById('chatBody');
+        const sendButton = document.getElementById('sendButton');
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            sendButton.disabled = true;
+
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message';
+            userMessage.textContent = message;
+            chatBody.appendChild(userMessage);
+
+            const loading = document.createElement('div');
+            loading.className = 'loading';
+            loading.textContent = 'Processing...';
+            chatBody.appendChild(loading);
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to connect to server');
+                }
+
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                const botResponse = data.response;
+
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot-message';
+                if (botResponse.includes('```')) {
+                    const parts = botResponse.split('```');
+                    botMessage.innerHTML = `${parts[0]}<div class="code-block">${parts[1]}</div>`;
+                } else {
+                    botMessage.textContent = botResponse;
+                }
+                chatBody.appendChild(botMessage);
+            } catch (error) {
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message';
+                errorMessage.textContent = 'Error: ' + error.message;
+                chatBody.appendChild(errorMessage);
+            } finally {
+                chatBody.removeChild(loading);
+                sendButton.disabled = false;
+                userInput.value = '';
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+        }
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !sendButton.disabled) {
+                sendMessage();
+            }
+        });
+
+        userInput.focus();
+    </script>
+</body>
+</html>

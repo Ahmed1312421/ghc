@@ -1,17 +1,23 @@
+require('dotenv').config();
 const express = require('express');
 const fetch = require('node-fetch');
 const app = express();
 
 app.use(express.json());
 
-const DEEPSEEK_API_KEY = process.env.sk-5eaad634d9694a6d9569d0d45e440fad;
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
 
 app.post('/chat', async (req, res) => {
     const { message } = req.body;
 
     if (!message || typeof message !== 'string') {
-        return res.status(400).json({ error: 'Invalid or missing message' });
+        return res.status(400).json({ error: 'الرسالة غير صالحة أو مفقودة' });
+    }
+
+    if (!DEEPSEEK_API_KEY) {
+        console.error('الخطأ: مفتاح DEEPSEEK_API_KEY غير مضبوط');
+        return res.status(500).json({ error: 'خطأ في إعداد الخادم: مفتاح API مفقود' });
     }
 
     try {
@@ -24,7 +30,7 @@ app.post('/chat', async (req, res) => {
             body: JSON.stringify({
                 model: 'deepseek-chat',
                 messages: [
-                    { role: 'system', content: 'You are a helpful assistant specialized in Arduino programming but can answer general questions too.' },
+                    { role: 'system', content: 'أنت مساعد مفيد متخصص في برمجة Arduino، لكن يمكنك الإجابة على أسئلة عامة أيضًا.' },
                     { role: 'user', content: message }
                 ],
                 max_tokens: 200,
@@ -33,25 +39,31 @@ app.post('/chat', async (req, res) => {
         });
 
         if (!response.ok) {
-            throw new Error(`DeepSeek API error: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error(`خطأ DeepSeek API: ${response.status} - ${errorText}`);
+            throw new Error(`خطأ DeepSeek API: ${response.statusText}`);
         }
 
         const data = await response.json();
-        let botResponse = data.choices[0]?.message.content || 'Sorry, I didn’t understand. Can you clarify?';
+        if (!data.choices || !data.choices[0]?.message?.content) {
+            console.error('استجابة API غير متوقعة:', JSON.stringify(data, null, 2));
+            throw new Error('استجابة غير صالحة من DeepSeek API');
+        }
 
+        let botResponse = data.choices[0].message.content;
         botResponse = customizeArduinoResponse(message, botResponse);
 
         res.json({ response: botResponse });
     } catch (error) {
-        console.error('Error:', error.message);
-        res.status(500).json({ error: 'Failed to process request' });
+        console.error('الخطأ:', error.message, error.stack);
+        res.status(500).json({ error: 'فشل في معالجة الطلب: ' + error.message });
     }
 });
 
 function customizeArduinoResponse(message, response) {
     message = message.toLowerCase().trim();
-    if (message.includes('led') || message.includes('light')) {
-        return `Here’s a simple Arduino code to blink an LED:
+    if (message.includes('led') || message.includes('ضوء')) {
+        return `إليك كود Arduino بسيط لتشغيل LED:
 \`\`\`c
 #define LED_PIN 13
 void setup() {
@@ -64,21 +76,21 @@ void loop() {
   delay(1000);
 }
 \`\`\``;
-    } else if (message.includes('sensor') && message.includes('light')) {
-        return `To read a light sensor (LDR):
+    } else if (message.includes('مستشعر') && message.includes('ضوء')) {
+        return `لقراءة مستشعر ضوء (LDR):
 \`\`\`c
 void setup() {
   Serial.begin(9600);
 }
 void loop() {
   int lightValue = analogRead(A0);
-  Serial.print("Light Value: ");
+  Serial.print("قيمة الضوء: ");
   Serial.println(lightValue);
   delay(500);
 }
 \`\`\``;
-    } else if (message.includes('servo')) {
-        return `To control a servo motor:
+    } else if (message.includes('سيرفو')) {
+        return `للتحكم بمحرك سيرفو:
 \`\`\`c
 #include <Servo.h>
 Servo myServo;
@@ -96,8 +108,8 @@ void loop() {
   }
 }
 \`\`\``;
-    } else if (message.includes('button')) {
-        return `To read a button and control an LED:
+    } else if (message.includes('زر')) {
+        return `لقراءة زر والتحكم بـ LED:
 \`\`\`c
 #define BUTTON_PIN 2
 #define LED_PIN 13
@@ -113,14 +125,14 @@ void loop() {
   }
 }
 \`\`\``;
-    } else if (message.includes('lcd') && message.includes('screen')) {
-        return `To display text on a 16x2 LCD:
+    } else if (message.includes('شاشة') && message.includes('lcd')) {
+        return `لعرض نص على شاشة LCD 16x2:
 \`\`\`c
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 void setup() {
   lcd.begin(16, 2);
-  lcd.print("Hello, World!");
+  lcd.print("مرحباً بالعالم!");
 }
 void loop() {
   lcd.setCursor(0, 1);
@@ -128,8 +140,8 @@ void loop() {
   delay(1000);
 }
 \`\`\``;
-    } else if (message.includes('temperature')) {
-        return `To read temperature using an LM35 sensor:
+    } else if (message.includes('درجة الحرارة')) {
+        return `لقراءة درجة الحرارة باستخدام مستشعر LM35:
 \`\`\`c
 void setup() {
   Serial.begin(9600);
@@ -138,14 +150,14 @@ void loop() {
   int sensorValue = analogRead(A0);
   float voltage = sensorValue * (5.0 / 1023.0);
   float temperature = voltage * 100;
-  Serial.print("Temperature: ");
+  Serial.print("درجة الحرارة: ");
   Serial.print(temperature);
-  Serial.println(" C");
+  Serial.println(" مئوية");
   delay(1000);
 }
 \`\`\``;
-    } else if (message.includes('project') || message.includes('idea')) {
-        return `Project idea: Motion detector alarm using a PIR sensor:
+    } else if (message.includes('مشروع') || message.includes('فكرة')) {
+        return `فكرة مشروع: إنذار كشف الحركة باستخدام مستشعر PIR:
 \`\`\`c
 #define PIR_PIN 2
 #define BUZZER_PIN 8
@@ -164,14 +176,14 @@ void loop() {
   }
 }
 \`\`\``;
-    } else if (message.includes('hello') || message.includes('hi')) {
-        return 'Hi! How can I assist you with Arduino programming or other questions?';
-    } else if (message.includes('how are you')) {
-        return 'I’m just a bunch of code, but I’m ready to help! 😄 Ask me about Arduino or anything else!';
-    } else if (message.includes('time')) {
-        return `The current time is ${new Date().toLocaleTimeString('en-US')}. For an Arduino clock, try the RTClib library!`;
+    } else if (message.includes('مرحبا') || message.includes('اهلا')) {
+        return 'مرحبا! كيف يمكنني مساعدتك في برمجة Arduino أو أي أسئلة أخرى؟';
+    } else if (message.includes('كيف حالك')) {
+        return 'أنا مجرد كود، لكنني جاهز للمساعدة! 😄 اسألني عن Arduino أو أي شيء آخر!';
+    } else if (message.includes('الوقت')) {
+        return `الوقت الحالي هو ${new Date().toLocaleTimeString('ar-EG')}. لساعة Arduino، جرب مكتبة RTClib!`;
     } else {
-        return response || 'I didn’t quite get that. Could you clarify or ask about Arduino programming?';
+        return response || 'لم أفهم ذلك تمامًا. هل يمكنك التوضيح أو السؤال عن برمجة Arduino؟';
     }
 }
 

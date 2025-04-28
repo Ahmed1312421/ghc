@@ -4,7 +4,7 @@ const app = express();
 
 app.use(express.json());
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const DEEPSEEK_API_KEY = process.env.sk-5eaad634d9694a6d9569d0d45e440fad;
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
 
 app.post('/chat', async (req, res) => {

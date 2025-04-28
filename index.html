@@ -1,48 +1,9 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arduino AI Chatbot</title>
+    <title>روبوت دردشة Arduino AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -51,7 +12,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Tajawal', sans-serif;
             position: relative;
             overflow: hidden;
         }
@@ -107,7 +68,7 @@
         .robot-image {
             position: absolute;
             bottom: 20px;
-            right: 20px;
+            left: 20px;
             width: 150px;
             opacity: 0.2;
             z-index: 0;
@@ -139,12 +100,12 @@
         .user-message {
             background: #ff6f61;
             color: white;
-            margin-left: auto;
+            margin-right: auto;
         }
         .bot-message {
             background: #2a2a4e;
             color: #e0e7ff;
-            margin-right: auto;
+            margin-left: auto;
         }
         .code-block {
             background: #0f0f23;
@@ -182,32 +143,32 @@
 
     <div class="chat-container">
         <div class="bg-gradient-to-r from-[#ff6f61] to-[#e65b50] text-white text-center py-6 text-xl font-bold rounded-t-2xl">
-            Arduino AI Chatbot
+            روبوت دردشة Arduino AI
         </div>
         <div class="chat-body" id="chatBody">
             <div class="message bot-message">
-                Hello! I'm your AI assistant powered by DeepSeek. Ask me anything about Arduino programming or other topics!
+                مرحبا! أنا مساعدك الذكي مدعوم بـ DeepSeek. اسألني أي شيء عن برمجة Arduino أو مواضيع أخرى!
             </div>
         </div>
         <div class="p-4 bg-[#1a1a2e] border-t border-[#2a2a4e] flex items-center gap-3">
             <input
                 type="text"
                 id="userInput"
-                placeholder="Ask about Arduino or anything else..."
+                placeholder="اسأل عن Arduino أو أي شيء آخر..."
                 class="flex-1 p-3 border border-[#2a2a4e] bg-[#2a2a4e] text-[#e0e7ff] rounded-full focus:outline-none focus:ring-2 focus:ring-[#ff6f61] placeholder-[#e0e7ff]/50"
-                aria-label="Type your message"
+                aria-label="اكتب رسالتك"
             >
             <button
                 id="sendButton"
                 class="px-6 py-3 bg-[#ff6f61] text-white rounded-full hover:bg-[#e65b50] disabled:bg-[#4a4a6e] disabled:cursor-not-allowed transition-colors"
                 onclick="sendMessage()"
             >
-                Send
+                إرسال
             </button>
         </div>
     </div>
 
-    <img src="https://images.unsplash.com/photo-1599059813008-11265ba4b4ce" alt="Robot" class="robot-image">
+    <img src="https://images.unsplash.com/photo-1599059813008-11265ba4b4ce" alt="روبوت" class="robot-image">
 
     <script>
         const userInput = document.getElementById('userInput');
@@ -227,7 +188,7 @@
 
             const loading = document.createElement('div');
             loading.className = 'loading';
-            loading.textContent = 'Processing...';
+            loading.textContent = 'جارٍ المعالجة...';
             chatBody.appendChild(loading);
             chatBody.scrollTop = chatBody.scrollHeight;
 
@@ -241,7 +202,8 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to connect to server');
+                    const errorText = await response.text();
+                    throw new Error(`خطأ في الخادم: ${response.status} - ${errorText}`);
                 }
 
                 const data = await response.json();
@@ -263,7 +225,7 @@
             } catch (error) {
                 const errorMessage = document.createElement('div');
                 errorMessage.className = 'error-message';
-                errorMessage.textContent = 'Error: ' + error.message;
+                errorMessage.textContent = `خطأ: ${error.message}. حاول مرة أخرى أو تواصل مع الدعم.`;
                 chatBody.appendChild(errorMessage);
             } finally {
                 chatBody.removeChild(loading);

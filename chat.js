@@ -4,8 +4,8 @@ const app = express();
 
 app.use(express.json());
 
-const DEEPSEEK_API_KEY = 'sk-5eaad634d9694a6d9569d0d45e440fad';
-const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
+const GEMINI_API_KEY = 'AIzaSyAqpV4AxaQK2bHVQ6-Z0LwDaw0srd9R8_A'; // استبدل بمفتاح Gemini API الخاص بك
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 app.post('/chat', async (req, res) => {
     const { message } = req.body;
@@ -15,36 +15,35 @@ app.post('/chat', async (req, res) => {
     }
 
     try {
-        const response = await fetch(DEEPSEEK_API_URL, {
+        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'deepseek-chat',
-                messages: [
-                    { role: 'system', content: 'أنت مساعد مفيد متخصص في برمجة Arduino، لكن يمكنك الإجابة على أسئلة عامة أيضًا.' },
-                    { role: 'user', content: message }
-                ],
-                max_tokens: 200,
-                stream: false
+                contents: [
+                    {
+                        parts: [
+                            { text: `أنت مساعد مفيد متخصص في برمجة Arduino، لكن يمكنك الإجابة على أسئلة عامة أيضًا. ${message}` }
+                        ]
+                    }
+                ]
             })
         });
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error(`خطأ DeepSeek API: ${response.status} - ${errorText}`);
-            throw new Error(`خطأ DeepSeek API: ${response.statusText}`);
+            console.error(`خطأ Gemini API: ${response.status} - ${errorText}`);
+            throw new Error(`خطأ Gemini API: ${response.statusText}`);
         }
 
         const data = await response.json();
-        if (!data.choices || !data.choices[0]?.message?.content) {
+        if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
             console.error('استجابة API غير متوقعة:', JSON.stringify(data, null, 2));
-            throw new Error('استجابة غير صالحة من DeepSeek API');
+            throw new Error('استجابة غير صالحة من Gemini API');
         }
 
-        let botResponse = data.choices[0].message.content;
+        let botResponse = data.candidates[0].content.parts[0].text;
         botResponse = customizeArduinoResponse(message, botResponse);
 
         res.json({ response: botResponse });
@@ -54,6 +53,7 @@ app.post('/chat', async (req, res) => {
     }
 });
 
+// باقي الكود (دالة customizeArduinoResponse) كما هي
 function customizeArduinoResponse(message, response) {
     message = message.toLowerCase().trim();
     if (message.includes('led') || message.includes('ضوء')) {

@@ -1,162 +1,244 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Control Panel</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم LED</title>
   <style>
+    /* CSS */
     body {
       margin: 0;
       padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      color: white;
       min-height: 100vh;
-      background-image: linear-gradient(-45deg, rgb(3, 18, 43), rgb(14, 45, 43));
-      font-family: Arial, sans-serif;
-      flex-direction: column;
+      direction: rtl;
     }
+
     .navbar {
-      width: 100%;
-      background-color: #1a2526;
+      background-color: rgba(0, 0, 0, 0.7);
       padding: 15px 0;
+      width: 100%;
       position: fixed;
       top: 0;
       left: 0;
     }
+
     .navbar ul {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
+      list-style: none;
       display: flex;
       justify-content: center;
+      padding: 0;
+      margin: 0;
     }
+
     .navbar li {
       margin: 0 20px;
     }
+
     .navbar a {
       color: white;
       text-decoration: none;
       font-size: 18px;
+      transition: color 0.3s;
     }
+
     .navbar a:hover {
-      color: #cccccc;
+      color: #4dabf7;
     }
+
     .container {
+      max-width: 800px;
+      margin: 80px auto 0;
+      padding: 20px;
       text-align: center;
-      margin-top: 100px;
     }
+
     .title {
-      color: white;
-      font-size: 48px;
-      font-weight: bold;
-      margin-bottom: 20px;
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     }
+
+    .control-panel {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+
     .button {
-      display: block;
-      background-color: rgb(255, 255, 255);
-      color: black;
+      background: rgba(255, 255, 255, 0.8);
+      color: #333;
       padding: 15px 30px;
-      margin: 10px 0;
-      border-radius: 10px;
-      text-decoration: none;
-      font-size: 24px;
-      width: 600px;
-      text-align: left;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      margin: 20px auto;
+      width: 80%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       position: relative;
     }
-    #open {
-      background-color: rgb(48, 48, 48);
+
+    #led-toggle {
       width: 100px;
-      height: 35px;
+      height: 40px;
+      background: #ddd;
       border: none;
-      border-radius: 30px;
-      position: absolute;
-      right: 20px;
-      top: 24%;
+      border-radius: 20px;
       cursor: pointer;
+      position: relative;
+      outline: none;
     }
-    #ball {
-      background-color: red;
-      border-radius: 100%;
-      height: 30px;
-      width: 30px;
+
+    #led-indicator {
       position: absolute;
-      left: 3px;
-      top: 6%;
-      transition: 0.3s;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #ff4757;
+      top: 2px;
+      right: 2px;
+      transition: all 0.3s ease;
     }
-    #ball.on {
-      background-color: greenyellow;
-      left: 67px;
-      box-shadow: 0 0 25px greenyellow, 0 0 50px greenyellow, 0 0 75px greenyellow;
+
+    #led-indicator.on {
+      right: 62px;
+      background: #2ed573;
+      box-shadow: 0 0 10px #2ed573;
+    }
+
+    .status {
+      margin-top: 30px;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .status p {
+      margin: 10px 0;
+    }
+
+    @media (max-width: 600px) {
+      .button {
+        width: 95%;
+        font-size: 1rem;
+      }
+      
+      .title {
+        font-size: 1.8rem;
+      }
     }
   </style>
 </head>
 <body>
   <nav class="navbar">
     <ul>
-      <li><a href="#">Home</a></li>
-      <li><a href="#">Support</a></li>
-      <li><a href="#">Chat bot</a></li>
+      <li><a href="#">الرئيسية</a></li>
+      <li><a href="#">الإعدادات</a></li>
+      <li><a href="#">المساعدة</a></li>
     </ul>
   </nav>
+  
   <div class="container">
-    <h1 class="title">Control Panel</h1>
-    <div class="button">Opening Light
-      <button id="open"><div id="ball"></div></button>
+    <h1 class="title">لوحة تحكم الإضاءة</h1>
+    
+    <div class="control-panel">
+      <div class="button">
+        التحكم في LED
+        <button id="led-toggle">
+          <div id="led-indicator"></div>
+        </button>
+      </div>
+      
+      <div class="status">
+        <p>حالة الاتصال: <span id="connection-status">غير متصل</span></p>
+        <p>IP السيرفر: <span id="server-ip">192.168.x.x</span></p>
+      </div>
     </div>
-    <br><br><br>
-    <div class="button">Solar-Panel Degree</div>
-    <br><br><br>
-    <div class="button">Pollution Percentage</div>
   </div>
 
-  <!-- داخل <script> -->
-<script>
-  const toggleButton = document.getElementById('open');
-  const ball = document.getElementById('ball');
-
-  async function loadInitialState() {
-    try {
-      const response = await fetch('/led'); // ✅ تم تعديل المسار
-      const data = await response.json();
-      if (data.state) {
-        ball.classList.add('on');
-      } else {
-        ball.classList.remove('on');
-      }
-    } catch (error) {
-      console.error('Error loading initial state:', error);
-    }
-  }
-
-  async function toggleLed() {
-    const isOn = ball.classList.contains('on');
-    const newState = !isOn;
-
-    try {
-      const response = await fetch('/led', { // ✅ تم تعديل المسار
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ state: newState })
+  <script>
+    // JavaScript
+    document.addEventListener('DOMContentLoaded', function() {
+      const ledToggle = document.getElementById('led-toggle');
+      const ledIndicator = document.getElementById('led-indicator');
+      const connectionStatus = document.getElementById('connection-status');
+      const serverIpElement = document.getElementById('server-ip');
+      
+      // استبدل بعنوان IP الحقيقي لـ ESP8266
+      const serverIP = '192.168.1.2'; 
+      serverIpElement.textContent = serverIP;
+      
+      // متغير لحالة الـ LED
+      let ledState = false;
+      
+      // اختبار الاتصال بالسيرفر عند التحميل
+      checkConnection();
+      
+      // حدث النقر على زر الـ LED
+      ledToggle.addEventListener('click', function() {
+        ledState = !ledState;
+        toggleLED(ledState);
       });
-
-      if (response.ok) {
-        ball.classList.toggle('on');
-      } else {
-        console.error('Failed to update LED state');
+      
+      // دالة تغيير حالة الـ LED
+      async function toggleLED(state) {
+        try {
+          const response = await fetch(`http://${serverIP}/led`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ state: state })
+          });
+          
+          if (response.ok) {
+            updateLEDIndicator(state);
+            connectionStatus.textContent = 'متصل';
+            connectionStatus.style.color = '#2ed573';
+          } else {
+            throw new Error('فشل في الاتصال');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          connectionStatus.textContent = 'غير متصل';
+          connectionStatus.style.color = '#ff4757';
+          ledIndicator.classList.remove('on');
+        }
       }
-    } catch (error) {
-      console.error('Error updating LED state:', error);
-    }
-  }
-
-  toggleButton.addEventListener('click', toggleLed);
-  loadInitialState();
-</script>
-
+      
+      // دالة تحديث مؤشر الـ LED
+      function updateLEDIndicator(state) {
+        if (state) {
+          ledIndicator.classList.add('on');
+        } else {
+          ledIndicator.classList.remove('on');
+        }
+      }
+      
+      // دالة التحقق من الاتصال
+      async function checkConnection() {
+        try {
+          const response = await fetch(`http://${serverIP}/led`);
+          if (response.ok) {
+            const data = await response.json();
+            ledState = data.state;
+            updateLEDIndicator(ledState);
+            connectionStatus.textContent = 'متصل';
+            connectionStatus.style.color = '#2ed573';
+          }
+        } catch (error) {
+          connectionStatus.textContent = 'غير متصل';
+          connectionStatus.style.color = '#ff4757';
+        }
+      }
+      
+      // التحقق من الاتصال كل 5 ثواني
+      setInterval(checkConnection, 5000);
+    });
+  </script>
 </body>
 </html>

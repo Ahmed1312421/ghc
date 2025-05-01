@@ -112,51 +112,51 @@
     <div class="button">Pollution Percentage</div>
   </div>
 
-  <script>
-    const toggleButton = document.getElementById('open');
-    const ball = document.getElementById('ball');
+  <!-- داخل <script> -->
+<script>
+  const toggleButton = document.getElementById('open');
+  const ball = document.getElementById('ball');
 
-    // تحميل حالة اللمبة من السيرفر
-    async function loadInitialState() {
-      try {
-        const response = await fetch('/api/led');
-        const data = await response.json();
-        if (data.state) {
-          ball.classList.add('on');
-        } else {
-          ball.classList.remove('on');
-        }
-      } catch (error) {
-        console.error('Error loading initial state:', error);
+  async function loadInitialState() {
+    try {
+      const response = await fetch('/led'); // ✅ تم تعديل المسار
+      const data = await response.json();
+      if (data.state) {
+        ball.classList.add('on');
+      } else {
+        ball.classList.remove('on');
       }
+    } catch (error) {
+      console.error('Error loading initial state:', error);
     }
+  }
 
-    // تبديل حالة اللمبة عند الضغط على الزر
-    async function toggleLed() {
-      const isOn = ball.classList.contains('on');
-      const newState = !isOn;
+  async function toggleLed() {
+    const isOn = ball.classList.contains('on');
+    const newState = !isOn;
 
-      try {
-        const response = await fetch('/api/led', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ state: newState })
-        });
+    try {
+      const response = await fetch('/led', { // ✅ تم تعديل المسار
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ state: newState })
+      });
 
-        if (response.ok) {
-          ball.classList.toggle('on');
-        } else {
-          console.error('Failed to update LED state');
-        }
-      } catch (error) {
-        console.error('Error updating LED state:', error);
+      if (response.ok) {
+        ball.classList.toggle('on');
+      } else {
+        console.error('Failed to update LED state');
       }
+    } catch (error) {
+      console.error('Error updating LED state:', error);
     }
+  }
 
-    toggleButton.addEventListener('click', toggleLed);
-    loadInitialState();
-  </script>
+  toggleButton.addEventListener('click', toggleLed);
+  loadInitialState();
+</script>
+
 </body>
 </html>

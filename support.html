@@ -1,0 +1,248 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Page</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(45deg, #001f3f, #2c3e50, #1a3c34, #2c3e50);
+      color: #e0e0e0;
+      line-height: 1.6;
+      animation: shiftGradient 15s ease infinite;
+      background-size: 400% 400%;
+    }
+
+    @keyframes shiftGradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 60px auto;
+      padding: 30px;
+      background-color: rgba(44, 44, 44, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #ffffff;
+      font-size: 2.2rem;
+      letter-spacing: 1px;
+    }
+
+    .support-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    label {
+      font-weight: 500;
+      color: #b0b0b0;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+
+    input, textarea {
+      padding: 12px;
+      border: 1px solid #444;
+      border-radius: 8px;
+      font-size: 1rem;
+      background-color: #333;
+      color: #e0e0e0;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #1e90ff;
+      box-shadow: 0 0 8px rgba(30, 144, 255, 0.3);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    button {
+      padding: 14px;
+      background-color: #1e90ff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    button:hover {
+      background-color: #187bcd;
+      transform: translateY(-2px);
+    }
+
+    .response-message {
+      margin-top: 20px;
+      text-align: center;
+      color: #2ecc71;
+      font-size: 1rem;
+      display: none;
+    }
+
+    .error-message {
+      color: #e74c3c;
+    }
+
+    .contact-info {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 0.9rem;
+    }
+
+    .contact-info a {
+      color: #1e90ff;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .contact-info a:hover {
+      color: #63b3ed;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      button {
+        font-size: 1rem;
+      }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Support</h1>
+    <p style="text-align: center; margin-bottom: 25px; color: #b0b0b0;">We're here to help! Fill out the form below or contact us directly.</p>
+
+    <form class="support-form" id="supportForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" placeholder="Enter your name" required>
+
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+      <label for="message">Message:</label>
+      <textarea id="message" name="message" placeholder="Describe your issue or question" required></textarea>
+
+      <button type="button" onclick="sendSupportEmail()">Submit Inquiry</button>
+    </form>
+
+    <div class="response-message" id="responseMessage"></div>
+
+    <div class="contact-info">
+      <p>Or reach out to us directly at: 
+        <a href="mailto:support@yourwebsite.com">support@yourwebsite.com</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    
+    emailjs.init('XQsHTaFXMAFSGzUpG'); 
+
+    async function sendSupportEmail() {
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const message = document.getElementById('message').value;
+      const responseMessage = document.getElementById('responseMessage');
+
+  
+      responseMessage.style.display = 'none';
+      responseMessage.classList.remove('error-message');
+
+      try {
+        await emailjs.send('service_da1znzz', 'template_jlnqryc', {
+          name: name,
+          email: email,
+          message: message,
+        });
+        responseMessage.textContent = 'Email sent successfully!';
+        responseMessage.style.display = 'block';
+        document.getElementById('supportForm').reset(); 
+      } catch (error) {
+        console.error('Error:', error);
+        responseMessage.textContent = 'Failed to send inquiry. Please try again.';
+        responseMessage.classList.add('error-message');
+        responseMessage.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

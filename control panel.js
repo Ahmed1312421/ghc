@@ -1,7 +1,6 @@
 var power = true;
-var switche = document.getElementById('open');
 var ball = document.getElementById('ball');
-var ws = new WebSocket('wss://realtime.ably.io/?key=<NIbXFg.xtupNA:J4pZ-oZHiZZri6N2kJkCTHYvj6mozR6lOqFkYig6NMI>&clientId=web-client');
+var ws = new WebSocket('wss://realtime.ably.io/?key=YOUR_ABLY_API_KEY&clientId=web-client'); // Replace with valid key
 
 ws.onopen = function() {
     console.log('WebSocket connected');
@@ -21,6 +20,7 @@ ws.onclose = function() {
 };
 
 function control() {
+    console.log('Control function called');
     if (power) {
         power = false;
         ball.style.right = '65px';
@@ -46,7 +46,11 @@ function setServoAngle() {
 }
 
 function mapMQ135ToPercentage(value) {
-    // Convert MQ135 reading (0-1023) to percentage (0-100%)
-    // This is an approximate example; calibrate based on your sensor
     return (value / 1023) * 100;
 }
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('open').addEventListener('click', control);
+    document.getElementById('setAngle').addEventListener('click', setServoAngle);
+});

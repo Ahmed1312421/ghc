@@ -12,12 +12,40 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            height: 100vh;
             background-image: linear-gradient(-45deg, rgb(3, 18, 43), rgb(14, 45, 43));
             font-family: Arial, sans-serif;
             flex-direction: column;
         }
+        .navbar {
+            width: 100%;
+            background-color: #1a2526;
+            padding: 15px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        .navbar ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .navbar li {
+            margin: 0 20px;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        .navbar a:hover {
+            color: #cccccc;
+        }
         .container {
             text-align: center;
+            margin-top: 0px;
         }
         .title {
             color: white;
@@ -32,6 +60,7 @@
             padding: 15px 30px;
             margin: 10px 0;
             border-radius: 10px;
+            text-decoration: none;
             font-size: 24px;
             width: 600px;
             text-align: left;
@@ -43,29 +72,84 @@
             height: 35px;
             border: none;
             border-radius: 30px;
-            position: relative;
+            position: absolute;
             right: 20px;
+            top: 24%;
+            cursor: pointer;
         }
         #ball {
-            background-color: greenyellow;
+            background-color: red;
             border-radius: 100%;
             height: 30px;
             width: 30px;
             position: absolute;
-            right: 3px;
+            left: 3px;
             top: 6%;
-            box-shadow: 0 0 25px greenyellow, 0 0 50px greenyellow, 0 0 75px greenyellow;
             transition: 0.3s;
+        }
+        #ball.on {
+            background-color: greenyellow;
+            left: 67px;
+            box-shadow: 0 0 25px greenyellow, 0 0 50px greenyellow, 0 0 75px greenyellow;
         }
     </style>
 </head>
 <body>
+    <nav class="navbar">
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Support</a></li>
+            <li><a href="#">Chat bot</a></li>
+        </ul>
+    </nav>
     <div class="container">
         <h1 class="title">Control Panel</h1>
         <div class="button">Opening Light
             <button id="open"><div id="ball"></div></button>
         </div>
+        <br><br><br>
+        <div class="button">Solar-Panel Degree</div>
+        <br><br><br>
+        <div class="button">Pollution Percentage</div>
     </div>
-    <script src="/controlPanel.js"></script>
+    <script>
+        const toggleButton = document.getElementById('open');
+        const ball = document.getElementById('ball');
+
+        // تحميل الحالة الأولية من الـ API
+        async function loadInitialState() {
+            try {
+                const response = await fetch('/api/led');
+                const data = await response.json();
+                ball.classList.toggle('on', data.state);
+            } catch (error) {
+                console.error('Error loading initial state:', error);
+            }
+        }
+
+        // التحكم في اللمبة
+        async function control() {
+            const isOn = ball.classList.contains('on');
+            const newState = !isOn;
+
+            try {
+                const response = await fetch('/api/led', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: newState })
+                });
+                if (response.ok) {
+                    ball.classList.toggle('on');
+                } else {
+                    console.error('Failed to update LED state');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        toggleButton.addEventListener('click', control);
+        loadInitialState();
+    </script>
 </body>
 </html>

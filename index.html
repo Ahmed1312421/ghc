@@ -12,40 +12,12 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            height: 100vh;
             background-image: linear-gradient(-45deg, rgb(3, 18, 43), rgb(14, 45, 43));
             font-family: Arial, sans-serif;
             flex-direction: column;
         }
-        .navbar {
-            width: 100%;
-            background-color: #1a2526;
-            padding: 15px 0;
-            position: fixed;
-            top: 0;
-            left: 0;
-        }
-        .navbar ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-        }
-        .navbar li {
-            margin: 0 20px;
-        }
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            font-size: 18px;
-        }
-        .navbar a:hover {
-            color: #cccccc;
-        }
         .container {
             text-align: center;
-            margin-top: 0px;
         }
         .title {
             color: white;
@@ -60,7 +32,6 @@
             padding: 15px 30px;
             margin: 10px 0;
             border-radius: 10px;
-            text-decoration: none;
             font-size: 24px;
             width: 600px;
             text-align: left;
@@ -86,35 +57,15 @@
             box-shadow: 0 0 25px greenyellow, 0 0 50px greenyellow, 0 0 75px greenyellow;
             transition: 0.3s;
         }
-        input {
-            margin-left: 10px;
-            padding: 5px;
-        }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <ul>
-            <li><a href="#">Home</a></li>
-            <li><a href="#">Support</a></li>
-            <li><a href="#">Chat bot</a></li>
-        </ul>
-    </nav>
     <div class="container">
-        <h1 class="title">control panel</h1>
-        <div class="button">opening light
+        <h1 class="title">Control Panel</h1>
+        <div class="button">Opening Light
             <button id="open"><div id="ball"></div></button>
         </div>
-        <br><br><br>
-        <div class="button">solar-panel degree
-            <input type="number" id="degreeInput" min="0" max="180" value="0">
-            <button id="setAngle">Set Angle</button>
-        </div>
-        <br><br><br>
-        <div class="button">pollution percentage
-            <input type="text" id="pollutionDisplay" readonly>
-        </div>
     </div>
-    <script src="controlPanel.js"></script>
+    <script src="/controlPanel.js"></script>
 </body>
 </html>

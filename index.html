@@ -23,7 +23,6 @@
       position: fixed;
       top: 0;
       left: 0;
-      z-index: 10;
     }
     .navbar ul {
       list-style-type: none;
@@ -51,20 +50,22 @@
       color: white;
       font-size: 48px;
       font-weight: bold;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
     .button {
-      background-color: white;
+      display: block;
+      background-color: rgb(255, 255, 255);
       color: black;
       padding: 15px 30px;
-      margin: 20px auto;
+      margin: 10px 0;
       border-radius: 10px;
+      text-decoration: none;
       font-size: 24px;
       width: 600px;
       text-align: left;
       position: relative;
     }
-    .switch-button {
+    #open {
       background-color: rgb(48, 48, 48);
       width: 100px;
       height: 35px;
@@ -72,22 +73,20 @@
       border-radius: 30px;
       position: absolute;
       right: 20px;
-      top: 50%;
-      transform: translateY(-50%);
+      top: 24%;
       cursor: pointer;
     }
-    .switch-ball {
+    #ball {
       background-color: red;
-      border-radius: 50%;
+      border-radius: 100%;
       height: 30px;
       width: 30px;
       position: absolute;
       left: 3px;
-      top: 50%;
-      transform: translateY(-50%);
+      top: 6%;
       transition: 0.3s;
     }
-    .switch-ball.on {
+    #ball.on {
       background-color: greenyellow;
       left: 67px;
       box-shadow: 0 0 25px greenyellow, 0 0 50px greenyellow, 0 0 75px greenyellow;
@@ -102,56 +101,61 @@
       <li><a href="#">Chat bot</a></li>
     </ul>
   </nav>
-
   <div class="container">
     <h1 class="title">Control Panel</h1>
-
-    <div class="button">
-      Opening Light
-      <button id="toggle-btn" class="switch-button">
-        <div id="toggle-ball" class="switch-ball"></div>
-      </button>
+    <div class="button">Opening Light
+      <button id="open"><div id="ball"></div></button>
     </div>
-
+    <br><br><br>
     <div class="button">Solar-Panel Degree</div>
+    <br><br><br>
     <div class="button">Pollution Percentage</div>
   </div>
 
   <script>
-    const toggleButton = document.getElementById('toggle-btn');
-    const ball = document.getElementById('toggle-ball');
+    const toggleButton = document.getElementById('open');
+    const ball = document.getElementById('ball');
 
+    // تحميل حالة اللمبة من السيرفر
     async function loadInitialState() {
       try {
         const response = await fetch('/api/led');
         const data = await response.json();
-        ball.classList.toggle('on', data.state);
+        if (data.state) {
+          ball.classList.add('on');
+        } else {
+          ball.classList.remove('on');
+        }
       } catch (error) {
         console.error('Error loading initial state:', error);
       }
     }
 
-    async function toggleLED() {
+    // تبديل حالة اللمبة عند الضغط على الزر
+    async function toggleLed() {
       const isOn = ball.classList.contains('on');
       const newState = !isOn;
 
       try {
         const response = await fetch('/api/led', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ state: newState })
         });
+
         if (response.ok) {
           ball.classList.toggle('on');
         } else {
           console.error('Failed to update LED state');
         }
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error updating LED state:', error);
       }
     }
 
-    toggleButton.addEventListener('click', toggleLED);
+    toggleButton.addEventListener('click', toggleLed);
     loadInitialState();
   </script>
 </body>

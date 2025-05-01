@@ -1,4 +1,3 @@
-// led.js في الجذر
 import { Pool } from 'pg';
 
 const pool = new Pool({
